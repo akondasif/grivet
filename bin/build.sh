@@ -2,6 +2,8 @@
 
 set -e
 
+cd ..
+
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 directories=( "core/deployables/admin" "core/deployables/ingest" "core/deployables/persist" "core/deployables/query" "core/deployables/standalone" "support/boot-admin" "support/config-server" "support/api-gateway" "support/discovery-service" "support/dashboard")
 

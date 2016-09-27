@@ -2,6 +2,8 @@
 
 set -e
 
+cd ..
+
 # Stage the Maven Site locally
 mvn site site:stage -Pdocumentation
 

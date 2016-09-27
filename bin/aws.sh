@@ -1,0 +1,1 @@
+export DOCKER_IP=$(wget -t3 -T2 -qO-  http://169.254.169.254/latest/meta-data/local-ipv4)

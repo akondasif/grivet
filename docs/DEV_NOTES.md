@@ -76,9 +76,15 @@ Consult [application.yml](https://github.com/fastnsilver/grivet/blob/master/core
 
 ### with Docker
 
-Assuming you have installed VirtualBox, Docker Machine, Docker Compose and Docker.
+On a Mac you must have either installed 
 
-If not, it's highly recommended (on a Mac) to install each via [Homebrew](http://brew.sh/) with
+  Docker Toolbox 
+
+or
+
+  VirtualBox, Docker Machine, Docker Compose and Docker.
+
+If the latter was your choice, it's highly recommended to install each via [Homebrew](http://brew.sh/) with
 
 ```
 brew tap caskroom/cask
@@ -89,6 +95,8 @@ brew install docker-machine
 brew install docker-compose
 brew install docker
 ```
+
+Each `.sh` script mentioned below resides in the `bin` sub-directory.
 
 The instruction below provisions a Docker host named `dev` with 2 CPU, 10Gb RAM and 40Gb disk space
 

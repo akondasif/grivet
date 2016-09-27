@@ -14,5 +14,4 @@ services:
       - 80:80
     environment:
       - SPRING_PROFILES_ACTIVE=docker
-      - DOCKER_IP=$DOCKER_IP
       - JAVA_OPTS=-Xmx256m -XX:+UseG1GC -XX:+UseStringDeduplication

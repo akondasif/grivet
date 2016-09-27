@@ -10,10 +10,16 @@ fi
 suffix=$1
 
 # Change directories
-cd docker
+cd deploy/docker
 
-# Export the active docker machine IP
-export DOCKER_IP=$(docker-machine ip $(docker-machine active))
+if [ -x "$(command -v docker-machine)" ]; then
+    # Export the active docker machine IP
+    export DOCKER_IP=$(docker-machine ip $(docker-machine active));
+fi
+
+if [ $suffix = "pipeline" ]; then
+    export KAFKA_ADVERTISED_HOST_NAME=$DOCKER_IP
+fi
 
 # docker-machine doesn't exist in Linux, assign default ip if it's not set
 DOCKER_IP=${DOCKER_IP:-0.0.0.0}

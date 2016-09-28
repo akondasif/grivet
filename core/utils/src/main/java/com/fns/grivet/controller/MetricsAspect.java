@@ -16,6 +16,9 @@ import com.codahale.metrics.Timer;
 @Component
 class MetricsAspect {
 
+	private static final String POINTCUT = "execution(* com.fns.grivet.controller.*Controller.*(..)) && "
+			+ "@annotation(org.springframework.web.bind.annotation.RequestMapping)";
+
 	private final MetricRegistry metricRegistry;
 
 	@Autowired
@@ -23,21 +26,15 @@ class MetricsAspect {
 		this.metricRegistry = metricRegistry;
 	}
 
-	@Around("execution(* com.fns.grivet.controller.*Controller.*(..)) && @annotation(org.springframework.web.bind.annotation.RequestMapping)")
-	public Object run(ProceedingJoinPoint pjp) throws Throwable {
-
-		Class<?> curClass = pjp.getTarget().getClass();
-		MethodSignature ms = (MethodSignature) pjp.getSignature();
-		Method m = ms.getMethod();
-
-		Timer timer = metricRegistry.timer(MetricRegistry.name(curClass, m.getName()));
-
+	@Around(value = POINTCUT)
+	public Object processingTime(ProceedingJoinPoint joinPoint) throws Throwable {
+		Class<?> curClass = joinPoint.getTarget().getClass();
+		MethodSignature ms = (MethodSignature) joinPoint.getSignature();
+		Method method = ms.getMethod();
+		Timer timer = metricRegistry.timer(MetricRegistry.name(curClass, method.getName()));
 		try (Timer.Context context = timer.time()) {
-			return pjp.proceed();
-		} catch (Exception t) {
-			throw t;
+			return joinPoint.proceed();
 		}
 	}
 
 }
-

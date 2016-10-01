@@ -16,7 +16,6 @@
 	<description>Service and UI deployables</description>
 
 	<modules>
-		<module>restdocs</module>
 		<module>admin</module>
 		<module>ingest</module>
 		<module>query</module>
@@ -25,6 +24,11 @@
 		<module>ui</module>
 	</modules>
 
+    <properties>
+        <logbook.version>1.0.0-RC5</logbook.version>
+        <undertow.version>1.4.3.Final</undertow.version>
+    </properties>
+	
 	<build>
 		<plugins>
 			<plugin>
@@ -76,6 +80,13 @@
 			<groupId>com.lmax</groupId>
 			<artifactId>disruptor</artifactId>
 			<version>${disruptor.version}</version>
+		</dependency>
+
+		<!-- Zalando/Logbook -->
+		<dependency>
+			<groupId>org.zalando</groupId>
+			<artifactId>logbook-spring-boot-starter</artifactId>
+			<version>${logbook.version}</version>
 		</dependency>
 
 		<!-- Spring Cloud -->

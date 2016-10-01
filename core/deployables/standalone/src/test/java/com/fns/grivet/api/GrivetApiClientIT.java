@@ -15,7 +15,7 @@
  */
 package com.fns.grivet.api;
 
-import static com.jayway.restassured.RestAssured.given;
+import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.fail;
 
@@ -39,8 +39,8 @@ import org.springframework.core.io.ResourceLoader;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import com.fns.grivet.TestInit;
-import com.jayway.restassured.RestAssured;
-import com.jayway.restassured.response.Response;
+import io.restassured.RestAssured;
+import io.restassured.response.Response;
 
 import net.javacrumbs.jsonunit.JsonAssert;
 

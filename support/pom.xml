@@ -23,6 +23,10 @@
         <module>discovery-service</module>
     </modules>
 
+    <properties>
+        <undertow.version>1.4.3.Final</undertow.version>
+    </properties>
+    
     <dependencies>
         <!-- Spring Boot -->
         <dependency>

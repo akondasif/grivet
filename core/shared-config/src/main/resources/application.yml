@@ -40,7 +40,24 @@ logging:
     org.springframework: INFO
     com.zaxxer.hikari: WARN
     com.fns.grivet: INFO
-    
+
+logbook:
+    exclude:
+        - /health
+        - /admin/**
+    filter.enabled: true
+    format.style: json
+    obfuscate:
+        headers:
+            - Authorization
+            - X-Secret
+        parameters:
+            - access_token
+            - password
+    write:
+        category: http.wire-log
+        level: INFO
+
 server:
   compression:
     enabled: true

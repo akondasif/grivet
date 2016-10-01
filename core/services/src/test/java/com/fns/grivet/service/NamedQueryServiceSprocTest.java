@@ -40,7 +40,7 @@ import org.springframework.util.MultiValueMap;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fns.grivet.TestInit;
 import com.fns.grivet.query.NamedQuery;
-import com.jayway.restassured.path.json.JsonPath;
+import io.restassured.path.json.JsonPath;
 
 @ActiveProfiles(value = { "hsqldb", "insecure" })
 @RunWith(SpringRunner.class)

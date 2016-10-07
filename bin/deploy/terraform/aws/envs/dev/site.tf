@@ -132,18 +132,80 @@ module "redis_elasticache" {
 }
 
 # Create an EC2 Launch Configuration and Autoscaling Group and configures EC2 instances for an ECS cluster
-module "ecs_autoscaling" {
+# This cluster will host Zuul
+module "ecs_apigw" {
   source = "../../modules/ecs_autoscaling"
-  cluster_name = "${var.cluster_name}"
-  key_name = "${var.key_name}"
-  instance_type = "${var.ecs_instance_type}"
-  region = "${var.region}"
+  cluster_name = "apigw"
+  key_name = "dev"
+  ami = "ami-b04e92d0"
+  instance_type = "t2.micro"
+  region = "us-west-2"
   availability_zones = "us-west-2a,us-west-2b,us-west-2c"
-  subnet_ids = "${join(",", module.vpc.private_subnets)}"
-  security_group_ids = "${module.sg_web.security_group_id},${module.sg_zookeeper.security_group_id},${module.sg_redis.security_group_id},${module.sg_mysql.security_group_id},${module.sg_elasticsearch.security_group_id},${module.sg_kafka.security_group_id}"
+  subnet_ids = "${join(",", module.vpc.public_subnets)}"
+  security_group_ids = "${module.sg_web.security_group_id}"
+  min_size = "1"
+  max_size = "4"
+  desired_capacity = "2"
+  iam_instance_profile = "AmazonECSContainerInstanceRole"
+  registry_email = "${var.registry_email}"
+  registry_auth = "${var.registry_auth}"
+}
+
+# Create an EC2 Launch Configuration and Autoscaling Group and configures EC2 instances for an ECS cluster
+# This cluster will host an ELK stack, statsd, Graphite, Grafana, PHPMyAdmin
+module "ecs_monitoring" {
+  source = "../../modules/ecs_autoscaling"
+  cluster_name = "monitoring"
+  key_name = "dev"
+  ami = "ami-b04e92d0"
+  instance_type = "t2.medium"
+  region = "us-west-2"
+  availability_zones = "us-west-2a,us-west-2b,us-west-2c"
+  subnet_ids = "${join(",", module.vpc.public_subnets)}"
+  security_group_ids = "${module.sg_web.security_group_id},${module.sg_redis.security_group_id},${module.sg_mysql.security_group_id},${module.sg_elasticsearch.security_group_id}"
   min_size = "3"
   max_size = "10"
-  desired_capacity ="4"
+  desired_capacity = "4"
+  iam_instance_profile = "AmazonECSContainerInstanceRole"
+  registry_email = "${var.registry_email}"
+  registry_auth = "${var.registry_auth}"
+}
+
+# Create an EC2 Launch Configuration and Autoscaling Group and configures EC2 instances for an ECS cluster
+# This cluster will host suite of Grivet micro-services, Eureka, Spring Boot Admin, Micro Dashboard, and Configuration Management
+module "ecs_grivet" {
+  source = "../../modules/ecs_autoscaling"
+  cluster_name = "grivet"
+  key_name = "dev"
+  ami = "ami-b04e92d0"
+  instance_type = "t2.medium"
+  region = "us-west-2"
+  availability_zones = "us-west-2a,us-west-2b,us-west-2c"
+  subnet_ids = "${join(",", module.vpc.private_subnets)}"
+  security_group_ids = "${module.sg_web.security_group_id},${module.sg_zookeeper.security_group_id},${module.sg_redis.security_group_id},${module.sg_mysql.security_group_id},${module.sg_kafka.security_group_id}"
+  min_size = "3"
+  max_size = "10"
+  desired_capacity = "4"
+  iam_instance_profile = "AmazonECSContainerInstanceRole"
+  registry_email = "${var.registry_email}"
+  registry_auth = "${var.registry_auth}"
+}
+
+# Create an EC2 Launch Configuration and Autoscaling Group and configures EC2 instances for an ECS cluster
+# This cluster will host Zookeeper, Kafka
+module "ecs_zk_kafka" {
+  source = "../../modules/ecs_autoscaling"
+  cluster_name = "zk_kafka"
+  key_name = "dev"
+  ami = "ami-b04e92d0"
+  instance_type = "t2.medium"
+  region = "us-west-2"
+  availability_zones = "us-west-2a,us-west-2b,us-west-2c"
+  subnet_ids = "${join(",", module.vpc.private_subnets)}"
+  security_group_ids = "${module.sg_web.security_group_id},${module.sg_zookeeper.security_group_id},${module.sg_kafka.security_group_id}"
+  min_size = "1"
+  max_size = "4"
+  desired_capacity = "2"
   iam_instance_profile = "AmazonECSContainerInstanceRole"
   registry_email = "${var.registry_email}"
   registry_auth = "${var.registry_auth}"

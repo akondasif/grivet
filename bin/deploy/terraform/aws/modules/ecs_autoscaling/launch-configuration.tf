@@ -1,5 +1,5 @@
 resource "aws_launch_configuration" "ecs" {
-    name = "${var.cluster_name}-${var.environment}"
+    name = "${var.cluster_name}-lc-${var.environment}"
     image_id = "${var.ami}"
     instance_type = "${var.instance_type}"
     iam_instance_profile = "${var.iam_instance_profile}"

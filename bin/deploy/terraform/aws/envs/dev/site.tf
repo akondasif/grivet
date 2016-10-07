@@ -38,9 +38,9 @@ module "bastion_host" {
   iam_instance_profile = "s3-readonly"
   s3_bucket_name = "pubkeys"
   vpc_id = "${module.vpc.vpc_id}"
-  subnet_ids = ${module.vpc.public_subnets}
+  subnet_ids = "${module.vpc.public_subnets}"
   keys_update_frequency = "5,20,35,50 * * * *"
-  eip = ${aws_eip.bastion.public_ip}
+  eip = "${aws_eip.bastion.public_ip}"
   additional_user_data_script = <<EOF
     pip install aws-ec2-assign-elastic-ip
     INSTANCE_ID=$(wget -q -O - http://169.254.169.254/latest/meta-data/instance-id)

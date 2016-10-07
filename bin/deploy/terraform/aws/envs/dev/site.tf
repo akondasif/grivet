@@ -47,7 +47,7 @@ module "bastion_host" {
     REGION=$(curl -s http://169.254.169.254/latest/dynamic/instance-identity/document | grep region | awk -F\" '{print $4}')
     EIP=$(aws ec2 describe-tags --filters "Name=resource-id,Values=${INSTANCE_ID}" "Name=key,Values=EIP" --output text --region ${REGION} --query 'Tags[*].Value')
     aws-ec2-assign-elastic-ip --valid-ips $EIP
-  EOF"
+  EOF
 }
 
 # Create a web security group

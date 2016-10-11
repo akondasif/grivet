@@ -11,11 +11,11 @@
 provider "aws" {
     access_key = "${var.aws_access_key}"
     secret_key = "${var.aws_secret_key}"
-    region = "${var.aws_region}"
+    region = "${var.region}"
 }
 
 resource "aws_db_instance" "main_rds_instance" {
-    identifier = "${var.rds_instance_name}-${environment}"
+    identifier = "${var.rds_instance_name}-${env}"
     allocated_storage = "${var.rds_allocated_storage}"
     engine = "${var.rds_engine_type}"
     engine_version = "${var.rds_engine_version}"
@@ -33,8 +33,8 @@ resource "aws_db_instance" "main_rds_instance" {
     storage_type = "${var.rds_storage_type}"
     
     tags {
-    Name = "${var.rds_instance_name}-rds-${var.rds_engine_type}-${var.rds_engine_version}-${var.environment}"
-    Environment = "${var.environment}"
+    Name = "${var.rds_instance_name}-rds-${var.rds_engine_type}-${var.rds_engine_version}-${var.env}"
+    Environment = "${var.env}"
   }
 }
 

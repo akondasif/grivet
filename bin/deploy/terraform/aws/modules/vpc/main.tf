@@ -1,83 +1,104 @@
+# Prefix resources with var.name so we can have many environments trivially
+
 resource "aws_vpc" "mod" {
   cidr_block = "${var.cidr}"
   enable_dns_hostnames = "${var.enable_dns_hostnames}"
   enable_dns_support = "${var.enable_dns_support}"
-
-  tags {
-    Name = "${var.name}-vpc-${var.environment}"
-    Environment = "${var.environment}"
+  tags { 
+    Name = "${var.env}_vpc"
   }
 }
 
 resource "aws_internet_gateway" "mod" {
   vpc_id = "${aws_vpc.mod.id}"
-
-  tags {
-    Name = "${var.name}-igw-${var.environment}"
-    Environment = "${var.environment}"
+  tags { 
+    Name = "${var.env}_igw"
   }
 }
 
-resource "aws_route_table" "public" {
-  vpc_id = "${aws_vpc.mod.id}"
-  propagating_vgws = ["${var.public_propagating_vgws}"]
-
-  tags {
-    Name = "${var.name}-public-rt-${var.environment}"
-    Environment = "${var.environment}"
-  }
-}
-
-resource "aws_route" "public_internet_gateway" {
-  route_table_id = "${aws_route_table.public.id}"
-  destination_cidr_block = "0.0.0.0/0"
-  gateway_id = "${aws_internet_gateway.mod.id}"
-}
-
-resource "aws_route_table" "private" {
-  vpc_id = "${aws_vpc.mod.id}"
-  propagating_vgws = ["${var.private_propagating_vgws}"]
-
-  tags {
-    Name = "${var.name}-private-rt-${var.environment}"
-    Environment = "${var.environment}"
-  }
-}
+# for each in the list of availability zones, create the public subnet 
+# and private subnet for that list index,
+# then create an EIP and attach a nat_gateway for each one.  and an aws route
+# table should be created for each private subnet, and add the correct nat_gw
 
 resource "aws_subnet" "private" {
   vpc_id = "${aws_vpc.mod.id}"
-  cidr_block = "${var.private_subnets[count.index]}"
-  availability_zone = "${var.azs[count.index]}"
-  count = "${length(var.private_subnets)}"
-
-  tags {
-    Name = "${var.name}-private-sn-${var.environment}"
-    Environment = "${var.environment}"
+  cidr_block = "${element(split(",", var.private_subnets), count.index)}"
+  availability_zone = "${element(split(",", var.azs), count.index)}"
+  count = "${length(compact(split(",", var.private_subnets)))}"
+  tags { 
+    Name = "${var.env}_private_${count.index}"
   }
 }
 
 resource "aws_subnet" "public" {
-  vpc_id  = "${aws_vpc.mod.id}"
-  cidr_block  = "${var.public_subnets[count.index]}"
-  availability_zone = "${var.azs[count.index]}"
-  count = "${length(var.public_subnets)}"
-
-  tags {
-    Name = "${var.name}-public-sn-${var.environment}"
-    Environment = "${var.environment}"
+  vpc_id = "${aws_vpc.mod.id}"
+  cidr_block = "${element(split(",", var.public_subnets), count.index)}"
+  availability_zone = "${element(split(",", var.azs), count.index)}"
+  count = "${length(compact(split(",", var.public_subnets)))}"
+  tags { 
+    Name = "${var.env}_public_${count.index}"
   }
-
-  map_public_ip_on_launch = "${var.map_public_ip_on_launch}"
+  map_public_ip_on_launch = true
 }
 
+# refactor to take all the route {} sections out of routing tables, 
+# and turn them into associated aws_route resources
+# so we can add vpc peering routes from specific environments.
+resource "aws_route_table" "public" {
+  vpc_id = "${aws_vpc.mod.id}"
+  tags { 
+    Name = "${var.env}_public_subnet_route_table"
+  }
+}
+
+# add a public gateway to each public route table
+resource "aws_route" "public_gateway_route" {
+  route_table_id = "${aws_route_table.public.id}"
+  depends_on = ["aws_route_table.public"]
+  destination_cidr_block = "0.0.0.0/0"
+  gateway_id = "${aws_internet_gateway.mod.id}"
+}
+
+resource "aws_eip" "nat_eip" {
+  count    = "${length(split(",", var.public_subnets))}"
+  vpc = true
+}
+
+resource "aws_nat_gateway" "nat_gw" {
+  count = "${length(split(",", var.public_subnets))}"
+  allocation_id = "${element(aws_eip.nat_eip.*.id, count.index)}"
+  subnet_id = "${element(aws_subnet.public.*.id, count.index)}"
+  depends_on = ["aws_internet_gateway.mod"]
+}
+
+# for each of the private subnets, create a "private" route table.
+resource "aws_route_table" "private" {
+  vpc_id = "${aws_vpc.mod.id}"
+  count = "${length(compact(split(",", var.private_subnets)))}"
+  tags {
+    Name = "${var.env}_private_subnet_route_table_${count.index}"
+  }
+}
+
+# add a nat gateway to each private subnet's route table
+resource "aws_route" "private_nat_gateway_route" {
+  count = "${length(compact(split(",", var.private_subnets)))}"
+  route_table_id = "${element(aws_route_table.private.*.id, count.index)}"
+  destination_cidr_block = "0.0.0.0/0"
+  depends_on = ["aws_route_table.private"]
+  nat_gateway_id = "${element(aws_nat_gateway.nat_gw.*.id, count.index)}"
+}
+
+# gonna need a custom route association for each range too
 resource "aws_route_table_association" "private" {
-  count = "${length(var.private_subnets)}"
+  count = "${length(compact(split(",", var.private_subnets)))}"
   subnet_id = "${element(aws_subnet.private.*.id, count.index)}"
-  route_table_id = "${aws_route_table.private.id}"
+  route_table_id = "${element(aws_route_table.private.*.id, count.index)}"
 }
 
 resource "aws_route_table_association" "public" {
-  count = "${length(var.public_subnets)}"
+  count = "${length(compact(split(",", var.public_subnets)))}"
   subnet_id = "${element(aws_subnet.public.*.id, count.index)}"
   route_table_id = "${aws_route_table.public.id}"
 }

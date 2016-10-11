@@ -24,4 +24,5 @@ variable "private_subnet_ids" {
 }
 
 variable "alarm_actions" {
+  default = ""
 }

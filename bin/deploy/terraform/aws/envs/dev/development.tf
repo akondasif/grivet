@@ -1,53 +1,30 @@
 # Specify the provider and access details
 provider "aws" {
-  region = "us-west-2"
+  region = "${var.region}"
+  access_key = "${var.aws_access_key}"
+  secret_key = "${var.aws_secret_key}"
 }
 
 # Create a VPC to launch our instances into
 module "vpc" {
   source = "../../modules/vpc"
-  name = "grivet"
+  env = "${var.env}"
   cidr = "10.0.0.0/16"
-  private_subnets = ["10.0.1.0/24", "10.0.2.0/24", "10.0.3.0/24"]
-  public_subnets = ["10.0.101.0/24", "10.0.102.0/24", "10.0.103.0/24"]
-  azs = ["us-west-2a", "us-west-2b", "us-west-2c"]
+  private_subnets = "10.0.1.0/24,10.0.2.0/24,10.0.3.0/24"
+  public_subnets = "10.0.101.0/24,10.0.102.0/24,10.0.103.0/24"
+  azs = "${var.availability_zones}"
   enable_dns_support = "true"
   enable_dns_hostnames = "true"
 }
 
-# Create NAT gateways
-module "nat_gw" {
-  source = "../../modules/nat_gateway"
-  vpc_id = "${module.vpc.vpc_id}"
-  cidrs = "${module.vpc.private_subnets}"
-  azs = ["us-west-2a", "us-west-2b", "us-west-2c"]
-  public_subnet_ids = "${module.vpc.public_subnets}"
-  nat_gateways_count = 3
-}
-
-# IAM policies
-
-# Create S3 bucket for public keys
-
-
 # Create a bastion host
-module "bastion_host" {
+module "bastion" {
   source = "../../modules/bastion"
-  region = "us-west-2"
-  #ami = "ami-123456"
-  iam_instance_profile = "s3-readonly"
-  s3_bucket_name = "pubkeys"
+  region = "${var.region}"
+  env = "${var.env}"
   vpc_id = "${module.vpc.vpc_id}"
-  subnet_ids = "${module.vpc.public_subnets}"
-  keys_update_frequency = "5,20,35,50 * * * *"
-  eip = "${aws_eip.bastion.public_ip}"
-  additional_user_data_script = <<EOF
-    pip install aws-ec2-assign-elastic-ip
-    INSTANCE_ID=$(wget -q -O - http://169.254.169.254/latest/meta-data/instance-id)
-    REGION=$(curl -s http://169.254.169.254/latest/dynamic/instance-identity/document | grep region | awk -F\" '{print $4}')
-    EIP=$(aws ec2 describe-tags --filters "Name=resource-id,Values=${INSTANCE_ID}" "Name=key,Values=EIP" --output text --region ${REGION} --query 'Tags[*].Value')
-    aws-ec2-assign-elastic-ip --valid-ips $EIP
-  EOF
+  subnet_id = "10.0.101.2"
+  key_name = "${var.key_name}"
 }
 
 # Create a web security group
@@ -101,7 +78,7 @@ module "sg_kafka" {
 # Create RDS MySQL instance
 module "rds_mysql_instance" {
   source = "../../modules/rds"
-  
+  env = "${var.env}"
   rds_instance_class = "db.t2.medium"
   rds_instance_name = "grivetdb"
   rds_allocated_storage = "20"
@@ -111,23 +88,22 @@ module "rds_mysql_instance" {
   database_user = "${var.db_user}"
   database_password = "${var.db_password}"
   rds_security_group_id = "${module.sg_mysql.security_group_id_mysql}"
-
-  subnet_az1 = "us-west-2a"
-  subnet_az2 = "us-west-2c"
+  subnet_az1 = "${var.rds_subnet_az1}"
+  subnet_az2 = "${var.rds_subnet_az2}"
+  aws_access_key = "${var.aws_access_key}"
+  aws_secret_key = "${var.aws_secret_key}"
+  region = "${var.region}"
 }
 
 # Create an Elasticache Redis cluster
 module "redis_elasticache" {
   source = "../../modules/elasticache_redis"
-
   vpc_id = "${module.vpc.vpc_id}"
   vpc_cidr_block = "10.0.0.0/16"
-
   cache_name = "cache"
   engine_version = "2.8.24"
   instance_type = "cache.t2.medium"
   maintenance_window = "sun:05:00-sun:06:00"
-
   private_subnet_ids = "${module.vpc.private_subnets}"
 }
 
@@ -137,12 +113,13 @@ module "ecs_apigw" {
   source = "../../modules/ecs_autoscaling"
   cluster_name = "apigw"
   key_name = "dev"
-  ami = "ami-b04e92d0"
+  ami = "${var.ecs_ami}"
   instance_type = "t2.micro"
-  region = "us-west-2"
-  availability_zones = "us-west-2a,us-west-2b,us-west-2c"
+  region = "${var.region}"
+  env = "${var.env}"
+  availability_zones = "${var.availability_zones}"
   subnet_ids = "${join(",", module.vpc.public_subnets)}"
-  security_group_ids = "${module.sg_web.security_group_id}"
+  security_group_ids = "${module.sg_web.security_group_id_web}"
   min_size = "1"
   max_size = "4"
   desired_capacity = "2"
@@ -157,12 +134,13 @@ module "ecs_monitoring" {
   source = "../../modules/ecs_autoscaling"
   cluster_name = "monitoring"
   key_name = "dev"
-  ami = "ami-b04e92d0"
+  ami = "${var.ecs_ami}"
   instance_type = "t2.medium"
-  region = "us-west-2"
-  availability_zones = "us-west-2a,us-west-2b,us-west-2c"
+  region = "${var.region}"
+  env = "${var.env}"
+  availability_zones = "${var.availability_zones}"
   subnet_ids = "${join(",", module.vpc.public_subnets)}"
-  security_group_ids = "${module.sg_web.security_group_id},${module.sg_redis.security_group_id},${module.sg_mysql.security_group_id},${module.sg_elasticsearch.security_group_id}"
+  security_group_ids = "${module.sg_web.security_group_id_web},${module.sg_redis.security_group_id_redis},${module.sg_mysql.security_group_id_mysql},${module.sg_elasticsearch.security_group_id_elasticsearch}"
   min_size = "3"
   max_size = "10"
   desired_capacity = "4"
@@ -177,12 +155,13 @@ module "ecs_grivet" {
   source = "../../modules/ecs_autoscaling"
   cluster_name = "grivet"
   key_name = "dev"
-  ami = "ami-b04e92d0"
+  ami = "${var.ecs_ami}"
   instance_type = "t2.medium"
-  region = "us-west-2"
-  availability_zones = "us-west-2a,us-west-2b,us-west-2c"
+  region = "${var.region}"
+  env = "${var.env}"
+  availability_zones = "${var.availability_zones}"
   subnet_ids = "${join(",", module.vpc.private_subnets)}"
-  security_group_ids = "${module.sg_web.security_group_id},${module.sg_zookeeper.security_group_id},${module.sg_redis.security_group_id},${module.sg_mysql.security_group_id},${module.sg_kafka.security_group_id}"
+  security_group_ids = "${module.sg_web.security_group_id_web},${module.sg_zookeeper.security_group_id_zookeeper},${module.sg_redis.security_group_id_redis},${module.sg_mysql.security_group_id_mysql},${module.sg_kafka.security_group_id_kafka}"
   min_size = "3"
   max_size = "10"
   desired_capacity = "4"
@@ -197,12 +176,13 @@ module "ecs_zk_kafka" {
   source = "../../modules/ecs_autoscaling"
   cluster_name = "zk_kafka"
   key_name = "dev"
-  ami = "ami-b04e92d0"
+  ami = "${var.ecs_ami}"
   instance_type = "t2.medium"
-  region = "us-west-2"
-  availability_zones = "us-west-2a,us-west-2b,us-west-2c"
+  region = "${var.region}"
+  env = "${var.env}"
+  availability_zones = "${var.availability_zones}"
   subnet_ids = "${join(",", module.vpc.private_subnets)}"
-  security_group_ids = "${module.sg_web.security_group_id},${module.sg_zookeeper.security_group_id},${module.sg_kafka.security_group_id}"
+  security_group_ids = "${module.sg_web.security_group_id_web},${module.sg_zookeeper.security_group_id_zookeeper},${module.sg_kafka.security_group_id_kafka}"
   min_size = "1"
   max_size = "4"
   desired_capacity = "2"

@@ -73,7 +73,7 @@ variable "registry_auth" {
     description = "Docker private registry login auth token (from ~/.dockercgf)"
 }
 
-variable "environment" {
+variable "env" {
     default = ""
-    description = "Environment name to tag EC2 resources with (tag=environment)"
+    description = "Environment name to tag EC2 resources with (tag=env)"
 }

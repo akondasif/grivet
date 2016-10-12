@@ -17,13 +17,20 @@ module "vpc" {
   enable_dns_hostnames = "true"
 }
 
+# SSH public/private key-pair
+resource "aws_key_pair" "pem" {
+  key_name = "${var.key_name}"
+  public_key = "${file(var.public_key_path)}"
+}
+
+
 # Create a bastion host
 module "bastion" {
   source = "../../modules/bastion"
   region = "${var.region}"
   env = "${var.env}"
   vpc_id = "${module.vpc.vpc_id}"
-  subnet_id = "10.0.101.2"
+  subnet_id = "${element(module.vpc.public_subnets, 0)}"
   key_name = "${var.key_name}"
 }
 
@@ -75,6 +82,11 @@ module "sg_kafka" {
   source_cidr_block = "${var.source_cidr_block}"
 }
 
+# Create IAM roles and policies
+module "iam" {
+  source = "../../modules/iam"
+}
+
 # Create RDS MySQL instance
 module "rds_mysql_instance" {
   source = "../../modules/rds"
@@ -88,8 +100,8 @@ module "rds_mysql_instance" {
   database_user = "${var.db_user}"
   database_password = "${var.db_password}"
   rds_security_group_id = "${module.sg_mysql.security_group_id_mysql}"
-  subnet_az1 = "${var.rds_subnet_az1}"
-  subnet_az2 = "${var.rds_subnet_az2}"
+  subnet_az1 = "${element(module.vpc.private_subnets, 0)}"
+  subnet_az2 = "${element(module.vpc.private_subnets, 2)}"
   aws_access_key = "${var.aws_access_key}"
   aws_secret_key = "${var.aws_secret_key}"
   region = "${var.region}"
@@ -107,13 +119,15 @@ module "redis_elasticache" {
   private_subnet_ids = "${module.vpc.private_subnets}"
 }
 
+## TODO add ELB per cluster, @see http://vilkeliskis.com/blog/2016/02/10/bootstrapping-docker-with-terraform.html for inspiration
+
 # Create an EC2 Launch Configuration and Autoscaling Group and configures EC2 instances for an ECS cluster
 # This cluster will host Zuul
 module "ecs_apigw" {
   source = "../../modules/ecs_autoscaling"
   cluster_name = "apigw"
-  key_name = "dev"
-  ami = "${var.ecs_ami}"
+  iam_instance_profile = "${module.iam.ecs_iam_instance_profile_id}"
+  key_name = "${var.key_name}"
   instance_type = "t2.micro"
   region = "${var.region}"
   env = "${var.env}"
@@ -123,7 +137,6 @@ module "ecs_apigw" {
   min_size = "1"
   max_size = "4"
   desired_capacity = "2"
-  iam_instance_profile = "AmazonECSContainerInstanceRole"
   registry_email = "${var.registry_email}"
   registry_auth = "${var.registry_auth}"
 }
@@ -133,8 +146,8 @@ module "ecs_apigw" {
 module "ecs_monitoring" {
   source = "../../modules/ecs_autoscaling"
   cluster_name = "monitoring"
-  key_name = "dev"
-  ami = "${var.ecs_ami}"
+  iam_instance_profile = "${module.iam.ecs_iam_instance_profile_id}"
+  key_name = "${var.key_name}"
   instance_type = "t2.medium"
   region = "${var.region}"
   env = "${var.env}"
@@ -144,7 +157,6 @@ module "ecs_monitoring" {
   min_size = "3"
   max_size = "10"
   desired_capacity = "4"
-  iam_instance_profile = "AmazonECSContainerInstanceRole"
   registry_email = "${var.registry_email}"
   registry_auth = "${var.registry_auth}"
 }
@@ -154,8 +166,8 @@ module "ecs_monitoring" {
 module "ecs_grivet" {
   source = "../../modules/ecs_autoscaling"
   cluster_name = "grivet"
-  key_name = "dev"
-  ami = "${var.ecs_ami}"
+  iam_instance_profile = "${module.iam.ecs_iam_instance_profile_id}"
+  key_name = "${var.key_name}"
   instance_type = "t2.medium"
   region = "${var.region}"
   env = "${var.env}"
@@ -165,7 +177,6 @@ module "ecs_grivet" {
   min_size = "3"
   max_size = "10"
   desired_capacity = "4"
-  iam_instance_profile = "AmazonECSContainerInstanceRole"
   registry_email = "${var.registry_email}"
   registry_auth = "${var.registry_auth}"
 }
@@ -175,8 +186,8 @@ module "ecs_grivet" {
 module "ecs_zk_kafka" {
   source = "../../modules/ecs_autoscaling"
   cluster_name = "zk_kafka"
-  key_name = "dev"
-  ami = "${var.ecs_ami}"
+  iam_instance_profile = "${module.iam.ecs_iam_instance_profile_id}"
+  key_name = "${var.key_name}"
   instance_type = "t2.medium"
   region = "${var.region}"
   env = "${var.env}"
@@ -186,7 +197,6 @@ module "ecs_zk_kafka" {
   min_size = "1"
   max_size = "4"
   desired_capacity = "2"
-  iam_instance_profile = "AmazonECSContainerInstanceRole"
   registry_email = "${var.registry_email}"
   registry_auth = "${var.registry_auth}"
 }

@@ -11,7 +11,7 @@ output "vpc_id" {
 }
 
 output "public_route_table_id" {
-  value = "${aws_route_table.public.id}"
+  value = "${aws_vpc.mod.main_route_table_id}"
 }
 
 output "private_route_table_id" {

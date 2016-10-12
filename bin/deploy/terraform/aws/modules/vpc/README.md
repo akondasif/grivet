@@ -49,7 +49,7 @@ Authors
 
 Originally created and maintained by [Casey Ransom](https://github.com/cransom)
 Hijacked by [Chris Phillipson](https://github.com/fastnsilver)
-And heavily influenced by [Charity Majors](https://github.com/charity) [aws-vpc.tf](https://gist.github.com/charity/28cbb58c913794b225afb8a0fefac542) gist
+And heavily influenced by [Charity Majors](https://github.com/charity) [aws-vpc.tf](https://gist.github.com/charity/28cbb58c913794b225afb8a0fefac542) gist and [kalilou](http://blog.kaliloudiaby.com/index.php/terraform-to-provision-vpc-on-aws-amazon-web-services/)
 
 License
 =======

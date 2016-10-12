@@ -1,5 +1,6 @@
 # Prefix resources with var.name so we can have many environments trivially
 
+# Create VPC
 resource "aws_vpc" "mod" {
   cidr_block = "${var.cidr}"
   enable_dns_hostnames = "${var.enable_dns_hostnames}"
@@ -9,28 +10,12 @@ resource "aws_vpc" "mod" {
   }
 }
 
-resource "aws_internet_gateway" "mod" {
-  vpc_id = "${aws_vpc.mod.id}"
-  tags { 
-    Name = "${var.env}_igw"
-  }
-}
-
-# for each in the list of availability zones, create the public subnet 
+# For each in the list of availability zones, create the public subnet 
 # and private subnet for that list index,
-# then create an EIP and attach a nat_gateway for each one.  and an aws route
+# then create an EIP and attach a nat_gateway for each one.  And an aws route
 # table should be created for each private subnet, and add the correct nat_gw
 
-resource "aws_subnet" "private" {
-  vpc_id = "${aws_vpc.mod.id}"
-  cidr_block = "${element(split(",", var.private_subnets), count.index)}"
-  availability_zone = "${element(split(",", var.azs), count.index)}"
-  count = "${length(compact(split(",", var.private_subnets)))}"
-  tags { 
-    Name = "${var.env}_private_${count.index}"
-  }
-}
-
+# Create VPC public subnets
 resource "aws_subnet" "public" {
   vpc_id = "${aws_vpc.mod.id}"
   cidr_block = "${element(split(",", var.public_subnets), count.index)}"
@@ -42,37 +27,50 @@ resource "aws_subnet" "public" {
   map_public_ip_on_launch = true
 }
 
-# refactor to take all the route {} sections out of routing tables, 
-# and turn them into associated aws_route resources
-# so we can add vpc peering routes from specific environments.
-resource "aws_route_table" "public" {
+# Create VPC private subnets
+resource "aws_subnet" "private" {
   vpc_id = "${aws_vpc.mod.id}"
+  cidr_block = "${element(split(",", var.private_subnets), count.index)}"
+  availability_zone = "${element(split(",", var.azs), count.index)}"
+  count = "${length(compact(split(",", var.private_subnets)))}"
   tags { 
-    Name = "${var.env}_public_subnet_route_table"
+    Name = "${var.env}_private_${count.index}"
   }
 }
 
-# add a public gateway to each public route table
-resource "aws_route" "public_gateway_route" {
-  route_table_id = "${aws_route_table.public.id}"
-  depends_on = ["aws_route_table.public"]
-  destination_cidr_block = "0.0.0.0/0"
-  gateway_id = "${aws_internet_gateway.mod.id}"
+# Create Internet Gateway
+resource "aws_internet_gateway" "igw" {
+  vpc_id = "${aws_vpc.mod.id}"
+  tags { 
+    Name = "${var.env}_igw"
+  }
 }
 
+# Create route to the Internet
+resource "aws_route" "internet_access" {
+  route_table_id = "${aws_vpc.mod.main_route_table_id}"
+  destination_cidr_block = "0.0.0.0/0"
+  gateway_id = "${aws_internet_gateway.igw.id}"
+}
+
+# Create Elastic IP (EIP)
 resource "aws_eip" "nat_eip" {
   count    = "${length(split(",", var.public_subnets))}"
   vpc = true
+  depends_on = ["aws_internet_gateway.igw"]
 }
 
+# Create NAT Gateways (one per public subnet)
 resource "aws_nat_gateway" "nat_gw" {
   count = "${length(split(",", var.public_subnets))}"
   allocation_id = "${element(aws_eip.nat_eip.*.id, count.index)}"
   subnet_id = "${element(aws_subnet.public.*.id, count.index)}"
-  depends_on = ["aws_internet_gateway.mod"]
+  depends_on = ["aws_internet_gateway.igw"]
 }
 
-# for each of the private subnets, create a "private" route table.
+# Create private route table and the route to the Internet
+
+# For each of the private subnets, create a "private" route table.
 resource "aws_route_table" "private" {
   vpc_id = "${aws_vpc.mod.id}"
   count = "${length(compact(split(",", var.private_subnets)))}"
@@ -81,16 +79,15 @@ resource "aws_route_table" "private" {
   }
 }
 
-# add a nat gateway to each private subnet's route table
+# Add a NAT Gateway to each private subnet's route table
 resource "aws_route" "private_nat_gateway_route" {
   count = "${length(compact(split(",", var.private_subnets)))}"
   route_table_id = "${element(aws_route_table.private.*.id, count.index)}"
   destination_cidr_block = "0.0.0.0/0"
-  depends_on = ["aws_route_table.private"]
   nat_gateway_id = "${element(aws_nat_gateway.nat_gw.*.id, count.index)}"
 }
 
-# gonna need a custom route association for each range too
+# Create route table associations
 resource "aws_route_table_association" "private" {
   count = "${length(compact(split(",", var.private_subnets)))}"
   subnet_id = "${element(aws_subnet.private.*.id, count.index)}"
@@ -100,5 +97,5 @@ resource "aws_route_table_association" "private" {
 resource "aws_route_table_association" "public" {
   count = "${length(compact(split(",", var.public_subnets)))}"
   subnet_id = "${element(aws_subnet.public.*.id, count.index)}"
-  route_table_id = "${aws_route_table.public.id}"
+  route_table_id = "${aws_vpc.mod.main_route_table_id}"
 }

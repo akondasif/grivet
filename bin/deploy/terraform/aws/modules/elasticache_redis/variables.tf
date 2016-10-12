@@ -21,6 +21,7 @@ variable "maintenance_window" {
 }
 
 variable "private_subnet_ids" {
+  default = []
 }
 
 variable "alarm_actions" {

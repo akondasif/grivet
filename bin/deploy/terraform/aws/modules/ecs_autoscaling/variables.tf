@@ -2,9 +2,22 @@ variable "cluster_name" {
     description = "The name of the ECS Cluster"
 }
 
+variable "iam_instance_profile" {
+
+}
+
+// @see http://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-optimized_AMI.html
 variable "ami" {
-  /* us-west-2, version 2016.09.0 */
-  default = "ami-b04e92d0"
+  default = {
+        us-east-1 = "ami-40286957"
+        us-west-1 = "ami-20fab440"
+        us-west-2 = "ami-562cf236"
+        eu-west-1 = "ami-175f1964"
+        eu-central-1 =  "ami-c55ea2aa"
+        ap-northeast-1 = "ami-010ed160"
+        ap-southeast-1 = "ami-438b2f20"
+        ap-southeast-2 = "ami-862211e5"
+  }
   description = "AMI id to launch, must be in the region specified by the region variable"
 }
 
@@ -53,9 +66,6 @@ variable "desired_capacity" {
 variable "health_check_grace_period" {
     default = "300"
     description = "Time after instance comes into service before checking health"
-}
-variable "iam_instance_profile" {
-    description = "The IAM Instance Profile (e.g. right side of Name=AmazonECSContainerInstanceRole)"
 }
 
 variable "registry_url" {

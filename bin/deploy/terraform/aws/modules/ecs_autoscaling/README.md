@@ -25,11 +25,10 @@ module "ecs-autoscaling" {
     min_size = "3"
     max_size = "10"
     desired_capacity ="4"
-    iam_instance_profile = "AmazonECSContainerInstanceRole"
     registry_url = "https://index.docker.io/v1/"
     registry_email = "your_email@"
     registry_auth = "your_registry_auth_token"
-    environment = "staging"
+    env = "staging"
 }
 ```
 

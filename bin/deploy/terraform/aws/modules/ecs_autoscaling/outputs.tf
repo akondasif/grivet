@@ -47,5 +47,5 @@ output "autoscaling.load_balancers" {
 }
 
 output "launch_configuration.id" {
-  value = "${aws_launch_configuration.ecs.id}"
+  value = "${aws_launch_configuration.ecs_cluster.id}"
 }

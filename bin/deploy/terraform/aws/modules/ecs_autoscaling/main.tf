@@ -1,5 +1,5 @@
 resource "aws_ecs_cluster" "ecs_cluster" {
-  name = "${var.cluster_name}"
+  name = "${var.cluster_name}-${var.env}"
 }
 
 
@@ -7,7 +7,7 @@ resource "aws_ecs_cluster" "ecs_cluster" {
 data "template_file" "user_data" {
   template = "templates/user_data"
   vars {
-    cluster_name = "${var.cluster_name}"
+    cluster_name = "${var.cluster_name}-${var.env}"
   }
 }
 
@@ -40,7 +40,7 @@ resource "aws_autoscaling_group" "ecs-cluster" {
 
   tag {
     key = "Name"
-    value =  "ECS ${var.cluster_name}"
+    value =  "ECS ${var.cluster_name}-${var.env}"
     propagate_at_launch = true
   }
 }

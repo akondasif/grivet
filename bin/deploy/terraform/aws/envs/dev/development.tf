@@ -17,13 +17,6 @@ module "vpc" {
   enable_dns_hostnames = "true"
 }
 
-# SSH public/private key-pair
-resource "aws_key_pair" "pem" {
-  key_name = "${var.key_name}"
-  public_key = "${file(var.public_key_path)}"
-}
-
-
 # Create a bastion host
 module "bastion" {
   source = "../../modules/bastion"
@@ -96,6 +89,7 @@ module "rds_mysql_instance" {
   rds_allocated_storage = "20"
   rds_engine_type = "mysql"
   rds_engine_version = "5.7"
+  db_parameter_group = "default.mysql5.7"
   database_name = "grivet"
   database_user = "${var.db_user}"
   database_password = "${var.db_password}"

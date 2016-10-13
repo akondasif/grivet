@@ -32,7 +32,6 @@ module "redis_elasticache" {
 - `maintenance_window` - 60 minute time window to reserve for maintenance
   (default: `sun:05:00-sun:06:00`)
 - `private_subnet_ids` - Comma delimited list of private subnet IDs
-- `alarm_actions` - Comma delimited list of ARNs to be notified via CloudWatch
 
 ## Outputs
 

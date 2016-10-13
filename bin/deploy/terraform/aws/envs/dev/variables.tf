@@ -4,8 +4,6 @@ variable "aws_access_key" {}
 
 variable "key_name" {}
 
-variable "public_key_path" {}
-
 variable "env" {}
 
 variable "region" {

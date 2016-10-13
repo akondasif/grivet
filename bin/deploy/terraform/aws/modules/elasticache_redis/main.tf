@@ -34,7 +34,7 @@ resource "aws_elasticache_cluster" "redis" {
 resource "aws_elasticache_subnet_group" "default" {
   name        = "${var.cache_name}-subnet-group"
   description = "Private subnets for the ElastiCache instances"
-  subnet_ids  = ["${split(",", var.private_subnet_ids)}"]
+  subnet_ids  = ["${var.private_subnet_ids}"]
 }
 
 #
@@ -55,8 +55,6 @@ resource "aws_cloudwatch_metric_alarm" "cpu" {
   dimensions {
     CacheClusterId = "${aws_elasticache_cluster.redis.id}"
   }
-
-  alarm_actions = ["${split(",", var.alarm_actions)}"]
 }
 
 resource "aws_cloudwatch_metric_alarm" "memory_free" {
@@ -75,6 +73,4 @@ resource "aws_cloudwatch_metric_alarm" "memory_free" {
   dimensions {
     CacheClusterId = "${aws_elasticache_cluster.redis.id}"
   }
-
-  alarm_actions = ["${split(",", var.alarm_actions)}"]
 }

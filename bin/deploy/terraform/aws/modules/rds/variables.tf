@@ -18,11 +18,8 @@ variable "rds_allocated_storage" {
     // You just give it the number, e.g. 10
 }
 variable "rds_engine_type" {
-    // Valid types are
-    // - mysql
-    // - postgres
-    // - oracle-*
-    // - sqlserver-*
+    // Valid types are:
+    // mysql | mariadb | oracle-se1 | oracle-se2 | oracle-se | oracle-ee | sqlserver-ee | sqlserver-se | sqlserver-ex | sqlserver-web | postgres | aurora
     // See http://docs.aws.amazon.com/cli/latest/reference/rds/create-db-instance.html
     // --engine
 }
@@ -45,9 +42,7 @@ variable "database_password" {}
 
 variable "rds_security_group_id" {}
 
-variable "db_parameter_group" {
-    default = "default.mysql5.6"
-}
+variable "db_parameter_group" {}
 
 // RDS Subnet Group Variables
 variable "subnet_az1" {}

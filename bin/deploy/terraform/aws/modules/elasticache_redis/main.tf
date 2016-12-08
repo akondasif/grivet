@@ -15,7 +15,7 @@ resource "aws_security_group" "redis" {
 #
 
 resource "aws_elasticache_cluster" "redis" {
-  cluster_id           = "${var.cache_name}"
+  cluster_id           = "${var.cache_name}-${var.env}"
   engine               = "redis"
   engine_version       = "${var.engine_version}"
   maintenance_window   = "${var.maintenance_window}"
@@ -28,6 +28,7 @@ resource "aws_elasticache_cluster" "redis" {
 
   tags {
     Name = "CacheCluster"
+    Environment = "${var.env}"
   }
 }
 

@@ -87,3 +87,7 @@ variable "env" {
     default = ""
     description = "Environment name to tag EC2 resources with (tag=env)"
 }
+
+variable "associate_public_ip_address" {
+    default = false
+    description = "Associate a public IP address with an instance in an ECS cluster?"

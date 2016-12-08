@@ -1,0 +1,260 @@
+{
+    "containerDefinitions": [
+        {
+            "environment": [
+                {
+                    "name": "JAVA_OPTS",
+                    "value": "-Xmx256m -XX:+UseG1GC -XX:+UseStringDeduplication"
+                },
+                {
+                    "name": "DOCKER_IP",
+                    "value": "$DOCKER_IP"
+                },
+                {
+                    "name": "SPRING_PROFILES_ACTIVE",
+                    "value": "docker"
+                }
+            ],
+            "essential": true,
+            "image": "fastnsilver/grivet-discovery-service",
+            "name": "discovery-service",
+            "portMappings": [
+                {
+                    "containerPort": 8761,
+                    "hostPort": 8761
+                }
+            ]
+        },
+        {
+            "environment": [
+                {
+                    "name": "JAVA_OPTS",
+                    "value": "-Xmx256m -XX:+UseG1GC -XX:+UseStringDeduplication"
+                },
+                {
+                    "name": "DOCKER_IP",
+                    "value": "$DOCKER_IP"
+                },
+                {
+                    "name": "SPRING_PROFILES_ACTIVE",
+                    "value": "docker"
+                }
+            ],
+            "essential": true,
+            "image": "fastnsilver/grivet-config-server",
+            "name": "config-service",
+            "portMappings": [
+                {
+                    "containerPort": 8888,
+                    "hostPort": 8888
+                }
+            ]
+        },
+        {
+            "environment": [
+                {
+                    "name": "JAVA_OPTS",
+                    "value": "-Xmx512m -XX:+UseG1GC -XX:+UseStringDeduplication"
+                },
+                {
+                    "name": "DOCKER_IP",
+                    "value": "$DOCKER_IP"
+                },
+                {
+                    "name": "SPRING_PROFILES_ACTIVE",
+                    "value": "docker"
+                }
+            ],
+            "essential": true,
+            "image": "fastnsilver/grivet-boot-admin",
+            "links": [
+                "discovery-service"
+            ],
+            "name": "springboot-admin",
+            "portMappings": [
+                {
+                    "containerPort": 5555,
+                    "hostPort": 5555
+                }
+            ]
+        },
+        {
+            "environment": [
+                {
+                    "name": "JAVA_OPTS",
+                    "value": "-Xmx512m -XX:+UseG1GC -XX:+UseStringDeduplication"
+                },
+                {
+                    "name": "DOCKER_IP",
+                    "value": "$DOCKER_IP"
+                },
+                {
+                    "name": "SPRING_PROFILES_ACTIVE",
+                    "value": "docker"
+                }
+            ],
+            "essential": true,
+            "image": "fastnsilver/grivet-dashboard",
+            "links": [
+                "discovery-service",
+                "redis"
+            ],
+            "name": "springboot-dashboard",
+            "portMappings": [
+                {
+                    "containerPort": 8088,
+                    "hostPort": 8088
+                }
+            ]
+        },
+        {
+            "environment": [
+                {
+                    "name": "MONITORING_STATSD_ENABLED",
+                    "value": "true"
+                },
+                {
+                    "name": "SPRING_DATASOURCE_URL",
+                    "value": "jdbc:mysql://db:3306/grivetdb"
+                },
+                {
+                    "name": "SPRING_PROFILES_ACTIVE",
+                    "value": "docker"
+                },
+                {
+                    "name": "JAVA_OPTS",
+                    "value": "-Xmx256m -XX:+UseG1GC -XX:+UseStringDeduplication"
+                }
+            ],
+            "essential": true,
+            "image": "fastnsilver/grivet-admin",
+            "links": [
+                "config-service",
+                "discovery-service",
+                "graphite",
+                "db"
+            ],
+            "name": "grivet-admin",
+            "portMappings": [
+                {
+                    "containerPort": 8085,
+                    "hostPort": 8085
+                }
+            ]
+        },
+        {
+            "environment": [
+                {
+                    "name": "MONITORING_STATSD_ENABLED",
+                    "value": "true"
+                },
+                {
+                    "name": "SPRING_PROFILES_ACTIVE",
+                    "value": "docker,pipeline"
+                },
+                {
+                    "name": "JAVA_OPTS",
+                    "value": "-Xmx512m -XX:+UseG1GC -XX:+UseStringDeduplication"
+                }
+            ],
+            "essential": true,
+            "image": "fastnsilver/grivet-ingest",
+            "links": [
+                "config-service",
+                "discovery-service",
+                "graphite",
+                "kafka",
+                "zookeeper:zk"
+            ],
+            "name": "grivet-ingest",
+            "portMappings": [
+                {
+                    "containerPort": 8081,
+                    "hostPort": 8081
+                }
+            ]
+        },
+        {
+            "environment": [
+                {
+                    "name": "MONITORING_STATSD_ENABLED",
+                    "value": "true"
+                },
+                {
+                    "name": "SPRING_DATASOURCE_URL",
+                    "value": "jdbc:mysql://db:3306/grivetdb"
+                },
+                {
+                    "name": "SPRING_PROFILES_ACTIVE",
+                    "value": "docker,pipeline"
+                },
+                {
+                    "name": "JAVA_OPTS",
+                    "value": "-Xmx512m -XX:+UseG1GC -XX:+UseStringDeduplication"
+                }
+            ],
+            "essential": true,
+            "image": "fastnsilver/grivet-persist",
+            "links": [
+                "config-service",
+                "discovery-service",
+                "graphite",
+                "db",
+                "kafka",
+                "redis",
+                "zookeeper:zk"
+            ],
+            "name": "grivet-persist",
+            "portMappings": [
+                {
+                    "containerPort": 8082,
+                    "hostPort": 8082
+                }
+            ]
+        },
+        {
+            "environment": [
+                {
+                    "name": "MONITORING_STATSD_ENABLED",
+                    "value": "true"
+                },
+                {
+                    "name": "SPRING_DATASOURCE_URL",
+                    "value": "jdbc:mysql://db:3306/grivetdb?rewriteBatchedStatements=true"
+                },
+                {
+                    "name": "SPRING_PROFILES_ACTIVE",
+                    "value": "docker"
+                },
+                {
+                    "name": "JAVA_OPTS",
+                    "value": "-Xmx512m -XX:+UseG1GC -XX:+UseStringDeduplication"
+                }
+            ],
+            "essential": true,
+            "image": "fastnsilver/grivet-query",
+            "links": [
+                "config-service",
+                "discovery-service",
+                "graphite",
+                "db"
+            ],
+            "name": "grivet-query",
+            "portMappings": [
+                {
+                    "containerPort": 8083,
+                    "hostPort": 8083
+                }
+            ]
+        }
+    ],
+    "family": "",
+    "volumes": [
+        {
+            "host": {
+                "sourcePath": "/var/run/docker.sock"
+            },
+            "name": "VarRunDocker_Sock"
+        }
+    ]
+}

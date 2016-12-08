@@ -22,3 +22,7 @@ variable "registry_auth" {}
 variable "db_user" {}
 
 variable "db_password" {}
+
+variable "admin_cidr_ingress" {
+  description = "CIDR to allow tcp/22 ingress to EC2 instance"
+}

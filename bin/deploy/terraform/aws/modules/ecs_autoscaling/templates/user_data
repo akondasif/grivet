@@ -1,3 +1,0 @@
-#!/bin/bash
-
-echo ECS_CLUSTER=${var.cluster_name} > /etc/ecs/ecs.config && echo ECS_ENGINE_AUTH_TYPE=dockercfg >> /etc/ecs/ecs.config && echo ECS_ENGINE_AUTH_DATA='{\"${var.registry_url}\":{\"auth\":\"${var.registry_auth}\",\"email\":\"${var.registry_email}\"}}' >> /etc/ecs/ecs.config

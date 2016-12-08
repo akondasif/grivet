@@ -24,3 +24,5 @@ variable "private_subnet_ids" {
   default = []
 }
 
+variable "env" {
+}

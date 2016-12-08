@@ -25,6 +25,7 @@ module "bastion" {
   vpc_id = "${module.vpc.vpc_id}"
   subnet_id = "${element(module.vpc.public_subnets, 0)}"
   key_name = "${var.key_name}"
+  admin_cidr_ingress = "${var.admin_cidr_ingress}"
 }
 
 # Create a web security group
@@ -106,6 +107,7 @@ module "redis_elasticache" {
   source = "../../modules/elasticache_redis"
   vpc_id = "${module.vpc.vpc_id}"
   vpc_cidr_block = "10.0.0.0/16"
+  env = "${var.env}"
   cache_name = "cache"
   engine_version = "2.8.24"
   instance_type = "cache.t2.medium"

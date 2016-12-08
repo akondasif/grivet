@@ -1,51 +1,15 @@
-output "autoscaling.id" {
-  value = "${aws_autoscaling_group.ecs-cluster.id}"
+output "instance_security_group" {
+  value = "${aws_security_group.instance_sg.id}"
 }
 
-output "autoscaling.availability_zones" {
-  value = "${aws_autoscaling_group.ecs-cluster.availability_zones}"
+output "launch_configuration" {
+  value = "${aws_launch_configuration.app.id}"
 }
 
-output "autoscaling.min_size" {
-  value = "${aws_autoscaling_group.ecs-cluster.min_size}"
+output "asg_name" {
+  value = "${aws_autoscaling_group.app.id}"
 }
 
-output "autoscaling.max_size" {
-  value = "${aws_autoscaling_group.ecs-cluster.max_size}"
-}
-
-output "autoscaling.default_cooldown" {
-  value = "${aws_autoscaling_group.ecs-cluster.default_cooldown}"
-}
-
-output "autoscaling.name" {
-  value = "${aws_autoscaling_group.ecs-cluster.name}"
-}
-
-output "autoscaling.health_check_grace_period" {
-  value = "${aws_autoscaling_group.ecs-cluster.health_check_grace_period}"
-}
-
-output "autoscaling.health_check_type" {
-  value = "${aws_autoscaling_group.ecs-cluster.health_check_type}"
-}
-
-output "autoscaling.desired_capacity" {
-  value = "${aws_autoscaling_group.ecs-cluster.desired_capacity}"
-}
-
-output "autoscaling.launch_configuration" {
-  value = "${aws_autoscaling_group.ecs-cluster.launch_configuration}"
-}
-
-output "autoscaling.vpc_zone_identifier" {
-  value = "${aws_autoscaling_group.ecs-cluster.vpc_zone_identifier}"
-}
-
-output "autoscaling.load_balancers" {
-  value = "${aws_autoscaling_group.ecs-cluster.load_balancers}"
-}
-
-output "launch_configuration.id" {
-  value = "${aws_launch_configuration.ecs_cluster.id}"
+output "elb_hostname" {
+  value = "${aws_alb.main.dns_name}"
 }

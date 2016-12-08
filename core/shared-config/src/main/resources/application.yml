@@ -45,6 +45,7 @@ logbook:
     exclude:
         - /health
         - /admin/**
+        - /v2/api-docs
     filter.enabled: true
     format.style: json
     obfuscate:
